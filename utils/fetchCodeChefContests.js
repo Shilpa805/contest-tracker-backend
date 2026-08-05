@@ -5,34 +5,36 @@ const fetchCodeChefContests = async () => {
         console.log("🔍 Fetching CodeChef contests...");
 
         const url = "https://www.codechef.com/api/list/contests/all";
-        const response = await axios.get(url);
+        const response = await axios.get(url, {
+            headers: {
+                "User-Agent": "Mozilla/5.0 (Windows NT 10.0; Win64; x64)"
+            },
+            timeout: 10000
+        });
 
-        console.log("🔍 CodeChef API Response:", response.data.past_contests.slice(0, 5)); // Debugging
+        if (!response.data) return [];
 
-        const upcoming = response.data.future_contests.map(contest => ({
+        const upcoming = (response.data.future_contests || []).map(contest => ({
             title: contest.contest_name,
             platform: "CodeChef",
-            start_time: new Date(contest.contest_start_date_iso),
-            duration: contest.contest_duration / 60,
+            start_time: new Date(contest.contest_start_date_iso || contest.contest_start_date),
+            duration: contest.contest_duration ? contest.contest_duration / 60 : 120, // Convert to minutes
             url: `https://www.codechef.com/${contest.contest_code}`,
             past: false,
         }));
 
-        const past = response.data.past_contests
-            .slice(0, 20) // 🔹 Get only the last 20 past contests
+        const past = (response.data.past_contests || [])
+            .slice(0, 20)
             .map(contest => ({
                 title: contest.contest_name,
                 platform: "CodeChef",
-                start_time: new Date(contest.contest_start_date_iso),
-                duration: contest.contest_duration / 60,
+                start_time: new Date(contest.contest_start_date_iso || contest.contest_start_date),
+                duration: contest.contest_duration ? contest.contest_duration / 60 : 120,
                 url: `https://www.codechef.com/${contest.contest_code}`,
                 past: true,
             }));
 
-        const allContests = [...upcoming, ...past];
-
-        console.log("✅ CodeChef Contests:", allContests);
-        return allContests;
+        return [...upcoming, ...past];
     } catch (error) {
         console.error("❌ Error fetching CodeChef contests:", error.message);
         return [];

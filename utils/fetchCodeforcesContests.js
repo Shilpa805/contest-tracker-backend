@@ -5,9 +5,11 @@ const fetchCodeforcesContests = async () => {
         console.log("🔍 Fetching Codeforces contests...");
 
         const url = "https://codeforces.com/api/contest.list";
-        const response = await axios.get(url);
+        const response = await axios.get(url, { timeout: 10000 });
 
-        console.log("🔍 Codeforces API Response:", response.data.result.slice(0, 5)); // Debugging
+        if (!response.data || !response.data.result) {
+            return [];
+        }
 
         const upcoming = response.data.result
             .filter(contest => contest.phase === "BEFORE")
@@ -15,14 +17,14 @@ const fetchCodeforcesContests = async () => {
                 title: contest.name,
                 platform: "Codeforces",
                 start_time: new Date(contest.startTimeSeconds * 1000),
-                duration: contest.durationSeconds / 60,
+                duration: contest.durationSeconds / 60, // Convert seconds to minutes
                 url: `https://codeforces.com/contest/${contest.id}`,
                 past: false,
             }));
 
         const past = response.data.result
             .filter(contest => contest.phase === "FINISHED")
-            .slice(0, 20) // 🔹 Get only the last 20 past contests
+            .slice(0, 20)
             .map(contest => ({
                 title: contest.name,
                 platform: "Codeforces",
@@ -32,10 +34,7 @@ const fetchCodeforcesContests = async () => {
                 past: true,
             }));
 
-        const allContests = [...upcoming, ...past];
-
-        console.log("✅ Codeforces Contests:", allContests);
-        return allContests;
+        return [...upcoming, ...past];
     } catch (error) {
         console.error("❌ Error fetching Codeforces contests:", error.message);
         return [];

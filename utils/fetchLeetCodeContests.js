@@ -19,31 +19,31 @@ const fetchLeetCodeContests = async () => {
 
         const response = await axios.post("https://leetcode.com/graphql", graphqlQuery, {
             headers: {
-                "Content-Type": "application/json"
-            }
+                "Content-Type": "application/json",
+                "User-Agent": "Mozilla/5.0 (Windows NT 10.0; Win64; x64)"
+            },
+            timeout: 10000
         });
 
-        const allContests = response.data.data.allContests;
+        const allContests = response.data?.data?.allContests || [];
         const now = Date.now();
 
         const contests = allContests.map(contest => ({
             title: contest.title,
             platform: "LeetCode",
-            start_time: new Date(contest.startTime * 1000), // Convert UNIX timestamp to UTC
+            start_time: new Date(contest.startTime * 1000),
             duration: contest.duration / 60, // Convert seconds to minutes
             url: `https://leetcode.com/contest/${contest.titleSlug}`,
-            past: contest.startTime * 1000 < now // Mark past contests correctly
+            past: contest.startTime * 1000 < now
         }));
 
-        // Sort past contests in descending order (latest first)
         const pastContests = contests
             .filter(contest => contest.past)
-            .sort((a, b) => b.start_time - a.start_time) // Sort by newest first
-            .slice(0, 20); // Get the last 10 past contests
+            .sort((a, b) => b.start_time - a.start_time)
+            .slice(0, 20);
 
         const upcomingContests = contests.filter(contest => !contest.past);
 
-        console.log("✅ LeetCode Contests Fetched:", [...upcomingContests, ...pastContests]);
         return [...upcomingContests, ...pastContests];
     } catch (error) {
         console.error("❌ Error fetching LeetCode contests:", error.message);
