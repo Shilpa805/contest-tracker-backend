@@ -1,13 +1,12 @@
 const mongoose = require("mongoose");
 
+const DEFAULT_MONGO_URI = "mongodb+srv://socialinkUser:Shilpa%404ever@cluster0.pxq164c.mongodb.net/contest-tracker?retryWrites=true&w=majority";
+
 const connectDB = async (retries = 10) => {
+    const mongoUri = process.env.MONGO_URI || DEFAULT_MONGO_URI;
     while (retries > 0) {
         try {
-            if (!process.env.MONGO_URI) {
-                console.error("❌ MONGO_URI environment variable is missing!");
-                return;
-            }
-            const conn = await mongoose.connect(process.env.MONGO_URI);
+            const conn = await mongoose.connect(mongoUri);
             console.log(`✅ MongoDB Connected: ${conn.connection.host}`);
             return;
         } catch (error) {
