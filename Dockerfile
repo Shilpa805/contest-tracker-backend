@@ -1,14 +1,11 @@
-# Use multi-stage build to reduce image size
-FROM node:18-slim AS builder
+FROM node:18-alpine
 
 WORKDIR /app
 COPY package*.json ./
-RUN npm ci  # Use npm ci for faster and more reliable builds
+RUN npm install
 
-COPY . .  
+COPY . .
 
-# Expose the port your backend runs on
 EXPOSE 5000
 
-# Start the server
-CMD ["npm", "start"]
+CMD ["node", "server.js"]
