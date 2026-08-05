@@ -5,6 +5,7 @@ const mongoose = require("mongoose");
 const cron = require('node-cron');
 const axios = require('axios');
 const path = require('path');
+const fs = require('fs');
 const contestRoutes = require("./routes/contestRoutes");
 const fetchSolutions = require("./utils/youtubeScraper");
 const fetchContests = require("./utils/fetchContests");
@@ -90,9 +91,19 @@ app.get('/api/health', (req, res) => {
 // Contest Routes
 app.use("/api/contests", contestRoutes);
 
+// Root Endpoint
+app.get('/', (req, res) => {
+  res.json({ status: "ok", message: "🏆 Contest Tracker API Server is running!", health: "/api/health", contests: "/api/contests" });
+});
+
 // SPA Fallback
 app.get('*', (req, res) => {
-  res.sendFile(path.join(__dirname, 'public', 'index.html'));
+  const indexPath = path.join(__dirname, 'public', 'index.html');
+  if (fs.existsSync(indexPath)) {
+    res.sendFile(indexPath);
+  } else {
+    res.json({ status: "ok", message: "🏆 Contest Tracker API Server is running!", health: "/api/health", contests: "/api/contests" });
+  }
 });
 
 const PORT = process.env.PORT || 5000;
